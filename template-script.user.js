@@ -4,11 +4,10 @@
 // @namespace    https://github.com/GiggioG/rplace-23-bg/
 // @version      0.3.2
 // @description  Help bulgaria with r/place.
-// @author       wokstym - repurposed from other subreddits
-// @author       Gigo_G - repurposed and added things
+// @author       Gigo_G - repurposed from wokstym, who repurposed it from other subreddits
 // @match        https://hot-potato.reddit.com/embed*
-// @updateURL    https://github.com/GiggioG/rplace-23-bg/raw/main/template-script.user.js
-// @downloadURL  https://github.com/GiggioG/rplace-23-bg/raw/main/template-script.user.js
+// @updateURL    https://github.com/GiggioG/rplace-2023-bulgaria/raw/main/template-script.user.js
+// @downloadURL  https://github.com/GiggioG/rplace-2023-bulgaria/raw/main/template-script.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=reddit.com
 // @grant        none
 // ==/UserScript==
