@@ -2,6 +2,7 @@
 // ==UserScript==
 // @name         r/bulgaria Template for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
+// @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
 // @version      0.3.2
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G - repurposed from wokstym, who repurposed it from other subreddits
@@ -58,6 +59,7 @@ function main() {
 }
 if (window.top !== window.self) {
     window.addEventListener('load', () => {
+        main();
         main();
     }, false);
 }
