@@ -76,7 +76,7 @@ function main() {
     container = document.querySelector("garlic-bread-embed").shadowRoot.querySelector("garlic-bread-camera")
         .querySelector("garlic-bread-canvas").shadowRoot.querySelector("div.container");
     update();
-    setInterval(update, 10000);
+    setInterval(update, 30 * 1000);
 }
 
 if (window.top !== window.self) {
