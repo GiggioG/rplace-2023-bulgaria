@@ -2,24 +2,24 @@
 // ==UserScript==
 // @name         r/bulgaria Template for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      0.4.1
+// @version      0.4.2
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G - repurposed from wokstym, who repurposed it from other subreddits
-// @match        https://*.reddit.com/*
+// @match        https://garlic-bread.reddit.com/embed?*
 // @updateURL    https://github.com/GiggioG/rplace-2023-bulgaria/raw/main/template-script.user.js
 // @downloadURL  https://github.com/GiggioG/rplace-2023-bulgaria/raw/main/template-script.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=reddit.com
-// @grant        none
+// @grant	     GM.xmlHttpRequest
 // ==/UserScript==
 const host = "r-place-2022-bulgaria.herokuapp.com";
 let templates = {};
+let container;
 
 function createImage() {
     const img = document.createElement("img");
     img.style = "position: absolute; image-rendering: pixelated; z-index: 9999;";
 
-    document.getElementsByTagName("mona-lisa-embed")[0].shadowRoot.children[0]
-        .getElementsByTagName("mona-lisa-canvas")[0].shadowRoot.children[0].appendChild(img);
+    container.appendChild(img);
 
     return img;
 }
@@ -29,9 +29,22 @@ function newTemplate(temp, tempName) {
     templates[tempName] = temp;
 }
 
+function makeRequest (method, url) {
+    return new Promise(function (resolve, reject) {
+        GM.xmlHttpRequest({
+            method: "GET",
+            url: `https://${host}/index.json`,
+            responseType: "json",
+            onload: (response) => {
+                resolve(JSON.parse(response.responseText));
+            },
+            onerror: reject
+        });
+    });
+}
+
 async function update(){
-    let resp = await fetch(`https://${host}/index.json`);
-    let json = await resp.json();
+    let json = await makeRequest(`https://${host}/index.json`);
 
     let oldT = Object.keys(templates);
     let newT = Object.keys(json);
@@ -60,6 +73,8 @@ async function update(){
 }
 
 function main() {
+    container = document.querySelector("garlic-bread-embed").shadowRoot.querySelector("garlic-bread-camera")
+        .querySelector("garlic-bread-canvas").shadowRoot.querySelector("div.container");
     update();
     setInterval(update, 10000);
 }
