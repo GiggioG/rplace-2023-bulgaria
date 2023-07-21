@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         r/bulgaria Auto-placer for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      1.0.1
+// @version      1.0.2
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G
 // @match        https://garlic-bread.reddit.com/embed?*
@@ -45,6 +45,7 @@ function getCanvasData(x, y, w, h) {
 }
 
 let colorDict = {};
+let reverseColorDict = {};
 
 function colorId(rgba) {
     let key = `${rgba[0]},${rgba[1]},${rgba[2]}`;
@@ -152,7 +153,7 @@ function getCanvasIndex(x, y){
 function place(conflict, token) {
     const {x, y, col} = conflict;
 
-    console.log(`placing (${x - 500}, ${y - 500}) with color #${col}. (from ${conflict.temp})`);
+    console.log(`placing (${x - 500}, ${y - 500}) with color #${col} %c▉ %c(from ${conflict.temp})`, `color: ${reverseColorDict[`${col}`]}`, `color:unset`);
 
     const {x:rX, y:rY, canvasIndex} = getCanvasIndex(x, y);
 
@@ -216,6 +217,7 @@ function getColorDict() {
 
         let key = color.join(',');
         colorDict[key] = id;
+        reverseColorDict[`${id}`] = b.querySelector("div").style.backgroundColor;
     });
 }
 
