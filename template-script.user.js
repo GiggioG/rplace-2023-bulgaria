@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         r/bulgaria Template for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      0.4.2
+// @version      0.4.3
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G - repurposed from wokstym, who repurposed it from other subreddits
 // @match        https://garlic-bread.reddit.com/embed?*
@@ -29,11 +29,11 @@ function newTemplate(temp, tempName) {
     templates[tempName] = temp;
 }
 
-function makeRequest (method, url) {
+function makeRequest (url) {
     return new Promise(function (resolve, reject) {
         GM.xmlHttpRequest({
             method: "GET",
-            url: `https://${host}/index.json`,
+            url: url,
             responseType: "json",
             onload: (response) => {
                 resolve(JSON.parse(response.responseText));
