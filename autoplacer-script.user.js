@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         r/bulgaria Auto-placer for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      1.0.4
+// @version      1.0.5
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G
 // @match        https://garlic-bread.reddit.com/embed?*
@@ -244,7 +244,7 @@ function formatTime(time){
 }
 
 function updateInfoToast(){
-    coords = document.querySelector("garlic-bread-embed").shadowRoot.querySelector("garlic-bread-status-pill").shadowRoot.querySelector("garlic-bread-coordinates").shadowRoot.innerHTML;
+    let coords = document.querySelector("garlic-bread-embed").shadowRoot.querySelector("garlic-bread-status-pill").shadowRoot.querySelector("garlic-bread-coordinates").shadowRoot.innerHTML;
     coords = coords.replaceAll(/<!--\?lit\$[0-9]+\$-->/g, "");
     coords = coords.match(/\([0-9\-]+,[0-9\-]+\)/)[0];
 
@@ -289,10 +289,12 @@ function setupInfoToast(){
     timeLeftInfoToast = document.createElement("h1");
     timeLeftInfoToast.style.fontSize = "x-large";
     timeLeftInfoToast.style.margin = "0px";
+    timeLeftInfoToast.style.color = "#111";
     infoToast.appendChild(timeLeftInfoToast);
 
     coordsInfoToast = document.createElement("p");
     coordsInfoToast.style.margin = "0px";
+    coordsInfoToast.style.color = "#111";
     infoToast.appendChild(coordsInfoToast);
 
     Toastify({
