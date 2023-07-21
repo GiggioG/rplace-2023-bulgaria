@@ -2,14 +2,18 @@
 // ==UserScript==
 // @name         r/bulgaria Auto-placer for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      1.0.2
+// @version      1.0.3
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G
 // @match        https://garlic-bread.reddit.com/embed?*
+// @require	     https://cdn.jsdelivr.net/npm/toastify-js
+// @resource     TOASTIFY_CSS https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css
 // @updateURL    https://github.com/GiggioG/rplace-2023-bulgaria/raw/main/autoplacer-script.user.js
 // @downloadURL  https://github.com/GiggioG/rplace-2023-bulgaria/raw/main/autoplacer-script.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=reddit.com
 // @grant	     GM.xmlHttpRequest
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
 // ==/UserScript==
 
 const host = "r-place-2022-bulgaria.herokuapp.com";
@@ -46,6 +50,7 @@ function getCanvasData(x, y, w, h) {
 
 let colorDict = {};
 let reverseColorDict = {};
+let reverseColorNameDict = {};
 
 function colorId(rgba) {
     let key = `${rgba[0]},${rgba[1]},${rgba[2]}`;
@@ -153,7 +158,8 @@ function getCanvasIndex(x, y){
 function place(conflict, token) {
     const {x, y, col} = conflict;
 
-    console.log(`placing (${x - 500}, ${y - 500}) with color #${col} %c▉ %c(from ${conflict.temp})`, `color: ${reverseColorDict[`${col}`]}`, `color:unset`);
+    toast(`Постави на (${x - 500}, ${y - 500}) с цвят ${reverseColorNameDict[col]}(#${col}) (от ${conflict.temp})`, reverseColorDict[col]);
+    log(`placing (${x - 500}, ${y - 500}) with color #${col} %c▉ %c(from ${conflict.temp})`, `color: ${reverseColorDict[col]};`, `color:unset;`);
 
     const {x:rX, y:rY, canvasIndex} = getCanvasIndex(x, y);
 
@@ -218,6 +224,7 @@ function getColorDict() {
         let key = color.join(',');
         colorDict[key] = id;
         reverseColorDict[`${id}`] = b.querySelector("div").style.backgroundColor;
+        reverseColorNameDict[`${id}`] = b.parentElement.querySelector("div.color-name").innerText;
     });
 }
 
@@ -245,7 +252,11 @@ function getRandomInBounds(min, max){
 }
 
 async function main() {
+    GM_addStyle(GM_getResourceText('TOASTIFY_CSS'));
     token = await getAccessToken();
+    toast(`accessToken е получен.`);
+    log(`accessToken granted.`);
+    
     canvas = document.querySelector("garlic-bread-embed").shadowRoot.querySelector("garlic-bread-camera")
         .querySelector("garlic-bread-canvas").shadowRoot.querySelector("div.container > canvas");
     ctx = canvas.getContext("2d");
@@ -257,4 +268,22 @@ if (window.top !== window.self) {
     window.addEventListener('load', () => {
         main();
     }, false);
+}
+
+function toast(msg, col="black"){
+    Toastify({
+        text: `Autoplacer: ${msg}`,
+        duration: 10*1000,
+        gravity: "top",
+        style: {
+            background: '#C6C6C6',
+            color: col
+        },
+    }).showToast();
+}
+
+function log(){
+    let args = arguments;
+    args[0] = `Autoplacer: ${args[0]}`;
+    console.log(...args)
 }
