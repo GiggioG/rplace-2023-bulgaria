@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         r/bulgaria Auto-placer for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      1.0.5
+// @version      1.0.6
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G
 // @match        https://garlic-bread.reddit.com/embed?*
@@ -248,7 +248,7 @@ function updateInfoToast(){
     coords = coords.replaceAll(/<!--\?lit\$[0-9]+\$-->/g, "");
     coords = coords.match(/\([0-9\-]+,[0-9\-]+\)/)[0];
 
-    time = (availStamp - (new Date()).getTime());
+    let time = (availStamp - (new Date()).getTime());
     time = formatTime(time);
 
     timeLeftInfoToast.innerHTML = time;
