@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         r/bulgaria Auto-placer for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      1.0.3
+// @version      1.0.4
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G
 // @match        https://garlic-bread.reddit.com/embed?*
@@ -152,6 +152,10 @@ function getCanvasIndex(x, y){
         y -= 500;
         canvasIndex = 4;
     }
+    if(x >= 500){
+        canvasIndex += 1;
+        x -= 500;
+    }
     return {x, y, canvasIndex};
 }
 
@@ -228,6 +232,32 @@ function getColorDict() {
     });
 }
 
+let availStamp, timeLeftInfoToast, coordsInfoToast;
+
+function formatTime(time){
+    let seconds = Math.floor(time/1000);
+    if(seconds < 0){return `00:00`;}
+
+    let minStr = String(Math.floor(seconds/60)).padStart(2, '0');
+    let secStr = String(seconds%60).padStart(2, '0');
+    return `${minStr}:${secStr}`;
+}
+
+function updateInfoToast(){
+    coords = document.querySelector("garlic-bread-embed").shadowRoot.querySelector("garlic-bread-status-pill").shadowRoot.querySelector("garlic-bread-coordinates").shadowRoot.innerHTML;
+    coords = coords.replaceAll(/<!--\?lit\$[0-9]+\$-->/g, "");
+    coords = coords.match(/\([0-9\-]+,[0-9\-]+\)/)[0];
+
+    time = (availStamp - (new Date()).getTime());
+    time = formatTime(time);
+
+    timeLeftInfoToast.innerHTML = time;
+    coordsInfoToast.innerHTML = coords;
+
+
+    document.querySelector("garlic-bread-embed").shadowRoot.querySelector("garlic-bread-color-picker").removeAttribute("is-visible");
+}
+
 async function getTimeLeft() {
     let resp = await fetch('https://gql-realtime-2.reddit.com/query', {
 		method: 'POST',
@@ -242,7 +272,7 @@ async function getTimeLeft() {
 		}
 	});
     let data = await resp.json();
-    let availStamp = data.data.act.data[0].data.nextAvailablePixelTimestamp;
+    availStamp = data.data.act.data[0].data.nextAvailablePixelTimestamp;
     let timeLeft = availStamp - (new Date()).getTime();
     return timeLeft;
 }
@@ -251,11 +281,39 @@ function getRandomInBounds(min, max){
     return Math.random() * (max-min) + min;
 }
 
+function setupInfoToast(){
+    document.querySelector("garlic-bread-embed").shadowRoot.querySelector("div.bottom-controls").style.display = "none";
+
+    let infoToast = document.createElement("div");
+
+    timeLeftInfoToast = document.createElement("h1");
+    timeLeftInfoToast.style.fontSize = "x-large";
+    timeLeftInfoToast.style.margin = "0px";
+    infoToast.appendChild(timeLeftInfoToast);
+
+    coordsInfoToast = document.createElement("p");
+    coordsInfoToast.style.margin = "0px";
+    infoToast.appendChild(coordsInfoToast);
+
+    Toastify({
+        node: infoToast,
+        duration: -1,
+        gravity: "bottom",
+        position: "center",
+        style: {
+            background: '#C6C6C6',
+        },
+    }).showToast();
+    setInterval(updateInfoToast, 250);
+}
+
 async function main() {
     GM_addStyle(GM_getResourceText('TOASTIFY_CSS'));
     token = await getAccessToken();
     toast(`accessToken е получен.`);
     log(`accessToken granted.`);
+
+    setupInfoToast();
     
     canvas = document.querySelector("garlic-bread-embed").shadowRoot.querySelector("garlic-bread-camera")
         .querySelector("garlic-bread-canvas").shadowRoot.querySelector("div.container > canvas");
