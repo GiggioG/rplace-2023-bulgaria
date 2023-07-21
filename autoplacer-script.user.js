@@ -2,12 +2,12 @@
 // ==UserScript==
 // @name         r/bulgaria Auto-placer for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      1.0.0
+// @version      1.0.1
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G
 // @match        https://garlic-bread.reddit.com/embed?*
-// @updateURL    https://github.com/GiggioG/rplace-2023-bulgaria/raw/main/bot-script.user.js
-// @downloadURL  https://github.com/GiggioG/rplace-2023-bulgaria/raw/main/bot-script.user.js
+// @updateURL    https://github.com/GiggioG/rplace-2023-bulgaria/raw/main/autoplacer-script.user.js
+// @downloadURL  https://github.com/GiggioG/rplace-2023-bulgaria/raw/main/autoplacer-script.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=reddit.com
 // @grant	     GM.xmlHttpRequest
 // ==/UserScript==
