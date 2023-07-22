@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         r/bulgaria Auto-placer for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      1.1.0
+// @version      1.1.1
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G
 // @match        https://garlic-bread.reddit.com/embed?*
@@ -144,27 +144,7 @@ async function getAccessToken() {
 
 let token;
 
-function getCanvasIndex(x, y) {
-    let canvasIndex;
-    if(y < 500){
-        canvasIndex = 0;
-        y += 500;
-    }else if(y >= 500){
-        canvasIndex = 3;
-        y -= 500;
-    }
-
-    if(x < 500){
-        x += 500;
-    }else if(x >= 500 && x < 1500){
-        x -= 500;
-        canvasIndex += 1;
-    }else if(x >= 1500){
-        x -= 1500;
-        canvasIndex += 2;
-    }
-    return { x, y, canvasIndex };
-}
+let getCanvasIndex;
 
 function place(conflict, token) {
     const { x, y, col } = conflict;
@@ -207,6 +187,8 @@ function place(conflict, token) {
 async function update() {
     getColorDict();
     let json = await makeRequest(`https://${host}/index.json`);
+    getCanvasIndex = (new Function(`return ${json.getCanvasIndex}`))();
+    debugger;
     topLeft = json.topLeft;
     json = json.templates;
     let names = Object.keys(json);
