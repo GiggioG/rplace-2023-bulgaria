@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         r/bulgaria Template for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      0.4.3
+// @version      0.5.0
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G - repurposed from wokstym, who repurposed it from other subreddits
 // @match        https://garlic-bread.reddit.com/embed?*
@@ -29,7 +29,7 @@ function newTemplate(temp, tempName) {
     templates[tempName] = temp;
 }
 
-function makeRequest (url) {
+function makeRequest(url) {
     return new Promise(function (resolve, reject) {
         GM.xmlHttpRequest({
             method: "GET",
@@ -43,8 +43,10 @@ function makeRequest (url) {
     });
 }
 
-async function update(){
+async function update() {
     let json = await makeRequest(`https://${host}/index.json`);
+    let topLeft = json.topLeft;
+    json = json.templates;
 
     let oldT = Object.keys(templates);
     let newT = Object.keys(json);
@@ -61,13 +63,16 @@ async function update(){
         templates[e].x = json[e].x;
         templates[e].y = json[e].y;
 
+        const topPx = templates[e].y - topLeft.y;
+        const leftPx = templates[e].x - topLeft.x;
+
         const nonce = String((new Date()).getTime());
         templates[e].el.src = `https://${host}/img?imgname=${e}&nonce=${nonce}`;
         templates[e].el.addEventListener("load", ()=>{
             templates[e].el.style.width = `${templates[e].el.naturalWidth/3}px`;
             templates[e].el.style.height = `${templates[e].el.naturalHeight/3}px`;
-            templates[e].el.style.top = `${templates[e].y}px`;
-            templates[e].el.style.left = `${templates[e].x}px`;
+            templates[e].el.style.top = `${topPx}px`;
+        templates[e].el.style.left = `${leftPx}px`;
         });
     });
 }

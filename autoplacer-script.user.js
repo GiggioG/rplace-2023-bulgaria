@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         r/bulgaria Auto-placer for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      1.0.6
+// @version      1.1.0
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G
 // @match        https://garlic-bread.reddit.com/embed?*
@@ -51,6 +51,7 @@ function getCanvasData(x, y, w, h) {
 let colorDict = {};
 let reverseColorDict = {};
 let reverseColorNameDict = {};
+let topLeft;
 
 function colorId(rgba) {
     let key = `${rgba[0]},${rgba[1]},${rgba[2]}`;
@@ -143,29 +144,35 @@ async function getAccessToken() {
 
 let token;
 
-function getCanvasIndex(x, y){
+function getCanvasIndex(x, y) {
     let canvasIndex;
     if(y < 500){
+        canvasIndex = 0;
         y += 500;
-        canvasIndex = 1;
     }else if(y >= 500){
+        canvasIndex = 3;
         y -= 500;
-        canvasIndex = 4;
     }
-    if(x >= 500){
-        canvasIndex += 1;
+
+    if(x < 500){
+        x += 500;
+    }else if(x >= 500 && x < 1500){
         x -= 500;
+        canvasIndex += 1;
+    }else if(x >= 1500){
+        x -= 1500;
+        canvasIndex += 2;
     }
-    return {x, y, canvasIndex};
+    return { x, y, canvasIndex };
 }
 
 function place(conflict, token) {
-    const {x, y, col} = conflict;
+    const { x, y, col } = conflict;
 
-    toast(`Постави на (${x - 500}, ${y - 500}) с цвят ${reverseColorNameDict[col]}(#${col}) (от ${conflict.temp})`, reverseColorDict[col]);
-    log(`placing (${x - 500}, ${y - 500}) with color #${col} %c▉ %c(from ${conflict.temp})`, `color: ${reverseColorDict[col]};`, `color:unset;`);
+    toast(`Постави на (${x + topLeft.x}, ${y + topLeft.y}) с цвят ${reverseColorNameDict[col]}(#${col}) (от ${conflict.temp})`, reverseColorDict[col]);
+    log(`placing (${x + topLeft.x}, ${y + topLeft.y}) with color #${col} %c▉ %c(from ${conflict.temp})`, `color: ${reverseColorDict[col]};`, `color:unset;`);
 
-    const {x:rX, y:rY, canvasIndex} = getCanvasIndex(x, y);
+    const { x: rX, y: rY, canvasIndex } = getCanvasIndex(x, y);
 
     return fetch('https://gql-realtime-2.reddit.com/query', {
         method: 'POST',
@@ -200,12 +207,14 @@ function place(conflict, token) {
 async function update() {
     getColorDict();
     let json = await makeRequest(`https://${host}/index.json`);
+    topLeft = json.topLeft;
+    json = json.templates;
     let names = Object.keys(json);
 
     let conflicts = [];
     for (let i = 0; i < names.length; i++) {
         const t = names[i];
-        let tConflicts = await getTemplateConflicts(t, json[t].x, json[t].y);
+        let tConflicts = await getTemplateConflicts(t, json[t].x - topLeft.x, json[t].y - topLeft.y);
         conflicts = conflicts.concat(tConflicts);
     }
 
@@ -234,16 +243,16 @@ function getColorDict() {
 
 let availStamp, timeLeftInfoToast, coordsInfoToast;
 
-function formatTime(time){
-    let seconds = Math.floor(time/1000);
-    if(seconds < 0){return `00:00`;}
+function formatTime(time) {
+    let seconds = Math.floor(time / 1000);
+    if (seconds < 0) { return `00:00`; }
 
-    let minStr = String(Math.floor(seconds/60)).padStart(2, '0');
-    let secStr = String(seconds%60).padStart(2, '0');
+    let minStr = String(Math.floor(seconds / 60)).padStart(2, '0');
+    let secStr = String(seconds % 60).padStart(2, '0');
     return `${minStr}:${secStr}`;
 }
 
-function updateInfoToast(){
+function updateInfoToast() {
     let coords = document.querySelector("garlic-bread-embed").shadowRoot.querySelector("garlic-bread-status-pill").shadowRoot.querySelector("garlic-bread-coordinates").shadowRoot.innerHTML;
     coords = coords.replaceAll(/<!--\?lit\$[0-9]+\$-->/g, "");
     coords = coords.match(/\([0-9\-]+,[0-9\-]+\)/)[0];
@@ -260,28 +269,28 @@ function updateInfoToast(){
 
 async function getTimeLeft() {
     let resp = await fetch('https://gql-realtime-2.reddit.com/query', {
-		method: 'POST',
-		body: "{\"operationName\":\"getUserCooldown\",\"variables\":{\"input\":{\"actionName\":\"r/replace:get_user_cooldown\"}},\"query\":\"mutation getUserCooldown($input: ActInput!) {\\n  act(input: $input) {\\n    data {\\n      ... on BasicMessage {\\n        id\\n        data {\\n          ... on GetUserCooldownResponseMessageData {\\n            nextAvailablePixelTimestamp\\n            __typename\\n          }\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}",
-		headers: {
-			'origin': 'https://hot-potato.reddit.com',
-			'referer': 'https://hot-potato.reddit.com/',
-			'apollographql-client-name': 'mona-lisa',
-			'Authorization': `Bearer ${token}`,
-			'Content-Type': 'application/json',
+        method: 'POST',
+        body: "{\"operationName\":\"getUserCooldown\",\"variables\":{\"input\":{\"actionName\":\"r/replace:get_user_cooldown\"}},\"query\":\"mutation getUserCooldown($input: ActInput!) {\\n  act(input: $input) {\\n    data {\\n      ... on BasicMessage {\\n        id\\n        data {\\n          ... on GetUserCooldownResponseMessageData {\\n            nextAvailablePixelTimestamp\\n            __typename\\n          }\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}",
+        headers: {
+            'origin': 'https://hot-potato.reddit.com',
+            'referer': 'https://hot-potato.reddit.com/',
+            'apollographql-client-name': 'mona-lisa',
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
             'User-Agent': navigator.userAgent
-		}
-	});
+        }
+    });
     let data = await resp.json();
     availStamp = data.data.act.data[0].data.nextAvailablePixelTimestamp;
     let timeLeft = availStamp - (new Date()).getTime();
     return timeLeft;
 }
 
-function getRandomInBounds(min, max){
-    return Math.random() * (max-min) + min;
+function getRandomInBounds(min, max) {
+    return Math.random() * (max - min) + min;
 }
 
-function setupInfoToast(){
+function setupInfoToast() {
     document.querySelector("garlic-bread-embed").shadowRoot.querySelector("div.bottom-controls").style.display = "none";
 
     let infoToast = document.createElement("div");
@@ -316,7 +325,7 @@ async function main() {
     log(`accessToken granted.`);
 
     setupInfoToast();
-    
+
     canvas = document.querySelector("garlic-bread-embed").shadowRoot.querySelector("garlic-bread-camera")
         .querySelector("garlic-bread-canvas").shadowRoot.querySelector("div.container > canvas");
     ctx = canvas.getContext("2d");
@@ -330,10 +339,10 @@ if (window.top !== window.self) {
     }, false);
 }
 
-function toast(msg, col="black"){
+function toast(msg, col = "black") {
     Toastify({
         text: `Autoplacer: ${msg}`,
-        duration: 10*1000,
+        duration: 10 * 1000,
         gravity: "top",
         style: {
             background: '#C6C6C6',
@@ -342,7 +351,7 @@ function toast(msg, col="black"){
     }).showToast();
 }
 
-function log(){
+function log() {
     let args = arguments;
     args[0] = `Autoplacer: ${args[0]}`;
     console.log(...args)
