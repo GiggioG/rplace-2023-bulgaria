@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         r/bulgaria Auto-placer for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      1.1.2
+// @version      1.1.3
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G
 // @match        https://garlic-bread.reddit.com/embed?*
@@ -144,6 +144,70 @@ async function getAccessToken() {
 
 let token;
 
+class GASM_Interpreter {
+    constructor(code) {
+        this.statements = code.split("\n").map(e => e.trim()).filter(e => e.length != 0).map(e => e.split(' '));
+    }
+    getValue(valStr, vars) {
+        if (valStr.startsWith('$')) {
+            return Number(vars[valStr]);
+        } else {
+            return Number(valStr);
+        }
+    }
+    compare(val1, op, val2) {
+        let ret;
+        let invert = false;
+        if (op.startsWith("!")) {
+            invert = true;
+            op = op.slice(1);
+        }
+        if (op == "==") { ret = (val1 == val2); }
+        else if (op == "<") { ret = (val1 < val2); }
+        else if (op == "<=") { ret = (val1 <= val2); }
+        else if (op == ">") { ret = (val1 > val2); }
+        else if (op == ">=") { ret = (val1 >= val2); }
+        if (invert) {
+            ret = !ret;
+        }
+        return ret;
+    }
+    executeStatement(stat, vars) {
+        if (stat[0] == "=") {
+            vars[stat[1]] = this.getValue(stat[2], vars);
+        } else if (stat[0] == "+=") {
+            vars[stat[1]] += this.getValue(stat[2], vars);
+        } else if (stat[0] == "-=") {
+            vars[stat[1]] -= this.getValue(stat[2], vars);
+        } else if (stat[0] == "return") {
+            vars.return[stat[2]] = this.getValue(stat[1], vars)
+        } else if (stat[0] == "if") {
+            let val1 = this.getValue(stat[1], vars);
+            let op = stat[2];
+            let val2 = this.getValue(stat[3], vars);
+            if (this.compare(val1, op, val2)) {
+                vars = this.executeStatement(stat.slice(4), vars);
+            }
+        }
+        return vars;
+    }
+    execute(params) {
+        let globVars = {
+            return: {}
+        };
+        Object.keys(params).forEach(p => {
+            globVars[`$${p}`] = params[p];
+        });
+
+        for (let i = 0; i < this.statements.length; i++) {
+            const stat = this.statements[i];
+            globVars = this.executeStatement(stat, globVars);
+        }
+        
+        return globVars.return;
+    }
+}
+
 let getCanvasIndex;
 
 function place(conflict, token) {
@@ -152,7 +216,7 @@ function place(conflict, token) {
     toast(`Постави на (${x + topLeft.x}, ${y + topLeft.y}) с цвят ${reverseColorNameDict[col]}(#${col}) (от ${conflict.temp})`, reverseColorDict[col]);
     log(`placing (${x + topLeft.x}, ${y + topLeft.y}) with color #${col} %c▉ %c(from ${conflict.temp})`, `color: ${reverseColorDict[col]};`, `color:unset;`);
 
-    const { x: rX, y: rY, canvasIndex } = getCanvasIndex(x, y);
+    const { x: rX, y: rY, canvasIndex } = getCanvasIndex.execute({x, y});
 
     return fetch('https://gql-realtime-2.reddit.com/query', {
         method: 'POST',
@@ -187,7 +251,7 @@ function place(conflict, token) {
 async function update() {
     getColorDict();
     let json = await makeRequest(`https://${host}/index.json`);
-    getCanvasIndex = (new Function(`return ${json.getCanvasIndex}`))();
+    getCanvasIndex = new GASM_Interpreter(json.getCanvasIndex);
     topLeft = json.topLeft;
     json = json.templates;
     let names = Object.keys(json);
@@ -202,7 +266,7 @@ async function update() {
     }
 
     let maxPriority = Math.max(...Object.keys(conflicts));
-    priorityConflicts = conflicts[maxPriority];
+    let priorityConflicts = conflicts[maxPriority];
 
     let conflictNo = Math.floor(Math.random() * priorityConflicts.length);
     let conflict = priorityConflicts[conflictNo];
