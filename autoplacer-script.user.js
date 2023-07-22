@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         r/bulgaria Auto-placer for r/place
 // @namespace    https://github.com/GiggioG/rplace-2023-bulgaria/
-// @version      1.1.1
+// @version      1.1.2
 // @description  Help bulgaria with r/place.
 // @author       Gigo_G
 // @match        https://garlic-bread.reddit.com/embed?*
@@ -188,20 +188,24 @@ async function update() {
     getColorDict();
     let json = await makeRequest(`https://${host}/index.json`);
     getCanvasIndex = (new Function(`return ${json.getCanvasIndex}`))();
-    debugger;
     topLeft = json.topLeft;
     json = json.templates;
     let names = Object.keys(json);
 
-    let conflicts = [];
+    let conflicts = {};
     for (let i = 0; i < names.length; i++) {
         const t = names[i];
         let tConflicts = await getTemplateConflicts(t, json[t].x - topLeft.x, json[t].y - topLeft.y);
-        conflicts = conflicts.concat(tConflicts);
+        const temp = json[t];
+        if (!conflicts[temp.priority]) { conflicts[temp.priority] = []; }
+        conflicts[temp.priority] = conflicts[temp.priority].concat(tConflicts);
     }
 
-    let conflictNo = Math.floor(Math.random() * conflicts.length);
-    let conflict = conflicts[conflictNo];
+    let maxPriority = Math.max(...Object.keys(conflicts));
+    priorityConflicts = conflicts[maxPriority];
+
+    let conflictNo = Math.floor(Math.random() * priorityConflicts.length);
+    let conflict = priorityConflicts[conflictNo];
 
     await place(conflict, token);
 
