@@ -1,3 +1,8 @@
+# Notice  
+This is now archived. You can see the final templates that were used in the `template_maker` folder. Those were used with the 
+[GiggioG/rplace-host-template](https://github.com/GiggioG/rplace-host-template) server and the [GiggioG/rplace-template-maker](https://github.com/GiggioG/rplace-template-maker) scripts for uploading them. Below you can see what the README.md was during the event.
+
+---
 |Линкове / Links|
 |--|
 |[Какво правим / What are we making](https://r-place-2022-bulgaria.herokuapp.com/)|
